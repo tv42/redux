@@ -87,83 +87,99 @@ func (target *File) RunDoFile(doInfo *DoInfo) (err error) {
 		      in order to avoid producing incorrect output.
 	*/
 
-	var outputs [2]*Output
-
-	// If the do file is a task, the first output goes to stdout
-	// and the second to a file that will be subsequently deleted.
-	for i := 0; i < len(outputs); i++ {
-		if i == 0 && target.IsTask() {
-			outputs[i] = &Output{os.Stdout, false}
-		} else {
-			outputs[i], err = target.NewOutput(i == 1)
-			if err != nil {
-				return err
-			}
-			defer func(f *Output) {
-				f.Close()
-				os.Remove(f.Name())
-			}(outputs[i])
-		}
+	targetPath := target.Fullpath()
+	if err := os.MkdirAll(filepath.Dir(targetPath), 0755); err != nil {
+		return err
 	}
 
-	err = target.runCmd(outputs, doInfo)
+	// If the do file is a task, stdout is not redirected
+	out := os.Stdout
+	cleanOut := true
+	outPath := targetPath + ".out.tmp"
+	if !target.IsTask() {
+		out, err = os.Create(outPath)
+		if err != nil {
+			return err
+		}
+		defer out.Close()
+		defer func() {
+			if cleanOut {
+				_ = os.Remove(outPath)
+			}
+		}()
+	}
+
+	dstPath := targetPath + ".dst.tmp"
+	cleanDst := true
+	defer func() {
+		if cleanDst {
+			_ = os.Remove(dstPath)
+		}
+	}()
+
+	err = target.runCmd(out, dstPath, doInfo)
 	if err != nil {
 		return err
 	}
 
 	if target.IsTask() {
 		// Task files should not write to the temp file.
-		size, err := outputs[1].Size()
-		if err != nil {
+		fi, err := os.Stat(dstPath)
+		switch {
+		case err != nil && !os.IsNotExist(err):
 			return err
-		}
 
-		if size > 0 {
+		case err == nil && fi.Size() > 0:
 			return target.Errorf("Task do file %s unexpectedly wrote to $3", target.DoFile)
 		}
 
 		return nil
 	}
 
-	//  Pick an output file...
-	//  In the correct case where one file has content and the other is empty,
-	//  the former is chosen and the latter is deleted.
-	//  If both are empty, the first one is chosen and the second deleted.
-	//  If both are non-empty, an error is reported and both are deleted.
+	dstExists := true
+	if _, err := os.Stat(dstPath); err != nil {
+		if !os.IsNotExist(err) {
+			return err
+		}
+		dstExists = false
+	}
 
-	// Default to the first one in case both are empty.
-	out := outputs[0]
+	fi, err := out.Stat()
+	if err != nil {
+		return err
+	}
+	outHasData := fi.Size() > 0
 
-	// number of files written to
-	outCount := 0
+	// Pick what output to preserve
+	switch {
+	case !dstExists && outHasData:
+		// use out
+		if err := os.Rename(outPath, targetPath); err != nil {
+			return err
+		}
+		cleanOut = false
 
-	for _, f := range outputs {
-		size, err := f.Size()
-		if err != nil {
+	case !dstExists && !outHasData:
+		// do not create target; ensure previous target is removed
+		if err := os.Remove(targetPath); err != nil && !os.IsNotExist(err) {
 			return err
 		}
 
-		if size > 0 {
-			outCount++
-			out = f
+	case dstExists && !outHasData:
+		// use dst
+		if err := os.Rename(dstPath, targetPath); err != nil {
+			return err
 		}
+		cleanDst = false
 
-		f.Close()
-	}
-
-	// It is an error to write to both files.
-	if outCount == len(outputs) {
+	case dstExists && outHasData:
 		return target.Errorf(".do file %s wrote to stdout and to file $3", target.DoFile)
-	}
-
-	if err := os.Rename(out.Name(), target.Fullpath()); err != nil {
-		return err
 	}
 
 	return nil
 }
 
-func (target *File) runCmd(outputs [2]*Output, doInfo *DoInfo) error {
+func (target *File) runCmd(out *os.File, dstPath string, doInfo *DoInfo) error {
 
 	args := []string{"-e"}
 
@@ -186,13 +202,13 @@ func (target *File) runCmd(outputs [2]*Output, doInfo *DoInfo) error {
 		basename = strings.TrimSuffix(basename, common)
 	}
 	basename = doInfo.RelPath(basename)
-	args = append(args, doInfo.Name, relTarget, basename, outputs[1].Name())
+	args = append(args, doInfo.Name, relTarget, basename, dstPath)
 
 	target.Debug("@sh %s $3\n", strings.Join(args[0:len(args)-1], " "))
 
 	cmd := exec.Command(shell, args...)
 	cmd.Dir = doInfo.Dir
-	cmd.Stdout = outputs[0]
+	cmd.Stdout = out
 	cmd.Stderr = os.Stderr
 
 	depth := os.Getenv("REDO_DEPTH")

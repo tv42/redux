@@ -135,12 +135,12 @@ func (f *File) redoTarget(doInfo *DoInfo, oldMeta *Metadata) error {
 	newMeta, err := f.NewMetadata()
 	if err != nil {
 		return err
-	} else if newMeta == nil {
-		return f.ErrNotFound("redoTarget: f.NewMetadata")
 	}
-
-	if err := f.PutMetadata(newMeta); err != nil {
-		return err
+	// newMeta can be nil if no target was created
+	if newMeta != nil {
+		if err := f.PutMetadata(newMeta); err != nil {
+			return err
+		}
 	}
 
 	if err := f.DeleteMustRebuild(); err != nil {

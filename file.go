@@ -281,7 +281,7 @@ func (f *File) GenerateNotifications(oldMeta, newMeta *Metadata) error {
 		}
 	}
 
-	if !newMeta.Equal(oldMeta) {
+	if newMeta == nil || !newMeta.Equal(oldMeta) {
 		if err := f.NotifyDependents(IFCHANGE); err != nil {
 			return err
 		}
@@ -293,25 +293,4 @@ func (f *File) GenerateNotifications(oldMeta, newMeta *Metadata) error {
 // RedoDir returns the path to the .redo directory.
 func (f *File) RedoDir() string {
 	return filepath.Join(f.RootDir, REDO_DIR)
-}
-
-// NewOutput returns an initialized Output
-func (f *File) NewOutput(isArg3 bool) (*Output, error) {
-	path := f.Fullpath()
-	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
-		return nil, err
-	}
-
-	if isArg3 {
-		path += ".dst.tmp"
-	} else {
-		path += ".out.tmp"
-	}
-
-	// TODO clean up temp files
-	tmp, err := os.Create(path)
-	if err != nil {
-		return nil, err
-	}
-	return &Output{tmp, isArg3}, nil
 }
