@@ -95,7 +95,7 @@ func runRedo(targets []string) error {
 
 	// If no arguments are specified, use run default target if its .do file exists.
 	// Otherwise, print usage and exit.
-	if len(targets) == 0 {
+	if len(targets) == 0 && os.Getenv("REDO_DEPTH") == "" {
 		if found, err := fileutils.FileExists(DEFAULT_DO); err != nil {
 			return err
 		} else if found {
