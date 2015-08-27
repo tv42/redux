@@ -101,9 +101,7 @@ func runRedo(targets []string) error {
 		} else if found {
 			targets = append(targets, DEFAULT_TARGET)
 		} else {
-			cmdRedo.Flag.Usage()
-			os.Exit(1)
-			return nil
+			targets = append(targets, "all")
 		}
 	}
 
