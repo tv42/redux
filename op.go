@@ -41,11 +41,7 @@ func (target *File) Redo() error {
 				return target.redoStatic(IFCHANGE, targetMeta)
 			}
 		} else {
-			if target.HasDoFile() {
-				return target.redoTarget(doInfo, targetMeta)
-			} else {
-				return target.redoStatic(IFCREATE, targetMeta)
-			}
+			return target.redoStatic(IFCREATE, targetMeta)
 		}
 	} else {
 		if recordFound {
