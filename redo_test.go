@@ -501,7 +501,11 @@ func TestBuildScriptLevel(t *testing.T) {
 				if testScript == echoer {
 					// add expected args $1 and $2
 					path := filepath.Join(subdir, s.Name)
-					s.Out = fmt.Sprintf("%s %s", path, path[:len(path)-len(filepath.Ext(path))])
+					pattern := path
+					if doFile == "default.txt.do" && strings.HasSuffix(path, ".txt") {
+						pattern = pattern[:len(pattern)-len(".txt")]
+					}
+					s.Out = fmt.Sprintf("%s %s", path, pattern)
 				}
 
 				cmd := dir.Command(s)

@@ -190,7 +190,18 @@ func (target *File) runCmd(outputs [2]*Output, doInfo *DoInfo) error {
 	}
 
 	relTarget := doInfo.RelPath(target.Name)
-	args = append(args, doInfo.Name, relTarget, doInfo.RelPath(target.Basename), outputs[1].Name())
+	basename := target.Name
+	const (
+		prefix = "default."
+		suffix = ".do"
+	)
+	if strings.HasPrefix(doInfo.Name, prefix) && strings.HasSuffix(doInfo.Name, suffix) {
+		common := doInfo.Name[len(prefix)-1:]
+		common = common[:len(common)-len(suffix)]
+		basename = strings.TrimSuffix(basename, common)
+	}
+	basename = doInfo.RelPath(basename)
+	args = append(args, doInfo.Name, relTarget, basename, outputs[1].Name())
 
 	target.Debug("@sh %s $3\n", strings.Join(args[0:len(args)-1], " "))
 

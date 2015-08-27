@@ -22,10 +22,8 @@ type File struct {
 	RootDir string // contains .redo directory
 	Path    string // Relative to RootDir
 
-	Dir      string
-	Name     string
-	Basename string
-	Ext      string // File extension. Could be empty. Includes preceeding dot.
+	Dir  string
+	Name string
 
 	PathHash Hash   // SHA1 hash of Path. Used as database key.
 	DoFile   string // Do script used to generate target output.
@@ -106,8 +104,6 @@ func NewFile(dir, path string) (f *File, err error) {
 	f.Debug("@Hash %s: %s -> %s\n", f.RootDir, f.Path, f.PathHash)
 
 	f.Dir, f.Name = splitpath(f.Fullpath())
-	f.Ext = filepath.Ext(f.Name)
-	f.Basename = f.Name[:len(f.Name)-len(f.Ext)]
 
 	if hasRoot {
 		// TODO(gsam): Read config file in rootDir to determine DB type, if any.
