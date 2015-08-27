@@ -77,11 +77,10 @@ func runRedo(targets []string) error {
 		redux.ShellArgs = s
 	}
 
-    // if shell args are set, ensure that at least minimal verbosity is also set.
-    if redux.ShellArgs != "" && (verbosity.NArg() == 0) {
-      verbosity.Set("true")
-    }
-
+	// if shell args are set, ensure that at least minimal verbosity is also set.
+	if redux.ShellArgs != "" && (verbosity.NArg() == 0) {
+		verbosity.Set("true")
+	}
 
 	// Set explicit options to avoid clobbering environment inherited options.
 	if n := verbosity.NArg(); n > 0 {
@@ -93,7 +92,6 @@ func runRedo(targets []string) error {
 		os.Setenv("REDO_DEBUG", "true")
 		redux.Debug = true
 	}
-
 
 	// If no arguments are specified, use run default target if its .do file exists.
 	// Otherwise, print usage and exit.

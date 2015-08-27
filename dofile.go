@@ -5,7 +5,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-	
+
 	"github.com/gyepisam/fileutils"
 )
 
@@ -59,7 +59,7 @@ TOP:
 				missing = append(missing, path)
 			}
 		}
-		
+
 		if dir == f.RootDir {
 			break TOP
 		}
