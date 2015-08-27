@@ -61,6 +61,5 @@
 <p>The -verbose variable can be set with the environment variable <code>REDO_VERBOSE</code>. The value of the variable is is not relevant, but its length corresponds to the intensity of verbosity. For example, <code>REDO_VERBOSE=xx</code> is comparable to invoking redo with the arguments '-verbose -verbose'.</p>
 <p>The -sh variable can be set with the environment variable <code>REDO_SHELL_ARGS</code>. This can be used to pass the '-v' or '-x' options, among others, to the shell (/bin/sh). redo prepends a '-' to the variable if necessary, so '-xv' could also be specified as 'xv'</p>
 <p>The -debug option can be set with the environment variable <code>REDO_DEBUG</code>. The value is not relevant, merely it's presence. <code>REDO_DEBUG=true</code> works fine.</p>
-<p>The <code>REDO_TMP_DIR</code> environment variable, which does not have a corresponding flag, can be set to control where redo creates temporary output files. The specified directory must exist and be writable to the redo process. This may be useful if /tmp is mounted on a fast device such as a ram disk or solid state drive (SSD).</p>
 </body>
 </html>

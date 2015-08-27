@@ -103,32 +103,6 @@ echo -n B
 	SimpleTree(t, s0, s1)
 }
 
-// chmod +x $3 should work even when tmp dir and output files are on different devices.
-// This test will always succeed when the tmp dir and output files are on the same device
-// and *should* succeed when they are not.
-// Run test like: env REDO_TMP_DIR=/var/tmp/redo go test
-// where REDO_TMP_DIR is not on the same device where the tests will run.
-func TestChmod(t *testing.T) {
-	s0 := Script{Name: "A", Out: "AB"}
-	s0.Command = `
-redo-ifchange B B ./B $(dirname $1)/B
-echo -n A
-if test -x B ; then
- cat B
-fi
-`
-	s1 := Script{Name: "B"}
-	s1.Command = `
-#Produce output for each invocation
-if test -e $1 ; then
- cat $1
-fi
-echo -n B > $3
-chmod +x $3
-`
-	SimpleTree(t, s0, s1)
-}
-
 // Redo target directories may be created by the do script.
 func TestNoneExistentDir(t *testing.T) {
 	s0 := Script{Name: "A", Out: "AB"}

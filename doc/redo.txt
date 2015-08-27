@@ -89,8 +89,3 @@ redo prepends a '-' to the variable if necessary, so '-xv' could also be specifi
 
 The -debug option can be set with the environment variable `REDO_DEBUG`.
 The value is not relevant, merely it's presence. `REDO_DEBUG=true` works fine.
-
-The `REDO_TMP_DIR` environment variable, which does not have a corresponding flag, can be set
-to control where redo creates temporary output files. The specified directory must exist and be writable
-to the redo process. This may be useful if /tmp is mounted on a fast device such as a ram disk
-or solid state drive (SSD).

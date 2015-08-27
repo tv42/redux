@@ -7,10 +7,8 @@ package redux
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/gyepisam/fileutils"
 )
@@ -113,12 +111,6 @@ func NewFile(dir, path string) (f *File, err error) {
 		if err != nil {
 			return nil, err
 		}
-
-		err := os.Mkdir(f.tempDir(), 0755)
-		if err != nil && !os.IsExist(err) {
-			return nil, err
-		}
-
 	} else {
 		f.Config = Config{DBType: "null"}
 		f.db, err = NullDbOpen("")
@@ -303,20 +295,21 @@ func (f *File) RedoDir() string {
 	return filepath.Join(f.RootDir, REDO_DIR)
 }
 
-func (f *File) tempDir() string {
-	if s := os.Getenv("REDO_TMP_DIR"); len(s) > 0 {
-		return s
-	}
-	return filepath.Join(f.RedoDir(), "tmp")
-}
-
-func (f *File) tempFile() (*os.File, error) {
-	return ioutil.TempFile(f.tempDir(), strings.Replace(f.Name, ".", "-", -1)+"-redo-tmp-")
-}
-
 // NewOutput returns an initialized Output
 func (f *File) NewOutput(isArg3 bool) (*Output, error) {
-	tmp, err := f.tempFile()
+	path := f.Fullpath()
+	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+		return nil, err
+	}
+
+	if isArg3 {
+		path += ".dst.tmp"
+	} else {
+		path += ".out.tmp"
+	}
+
+	// TODO clean up temp files
+	tmp, err := os.Create(path)
 	if err != nil {
 		return nil, err
 	}

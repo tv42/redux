@@ -156,26 +156,11 @@ func (target *File) RunDoFile(doInfo *DoInfo) (err error) {
 		return target.Errorf(".do file %s wrote to stdout and to file $3", target.DoFile)
 	}
 
-	err = os.Rename(out.Name(), target.Fullpath())
-
-	if err != nil && strings.Index(err.Error(), "cross-device") > -1 {
-
-		// The rename failed due to a cross-device error because the output file
-		// tmp dir is on a different device from the target file.
-		// Copy the tmp file across the device to the target directory and try again.
-		var path string
-		path, err = out.Copy(target.Dir)
-		if err != nil {
-			return err
-		}
-
-		err = os.Rename(path, target.Fullpath())
-		if err != nil {
-			os.Remove(path)
-		}
+	if err := os.Rename(out.Name(), target.Fullpath()); err != nil {
+		return err
 	}
 
-	return err
+	return nil
 }
 
 func (target *File) runCmd(outputs [2]*Output, doInfo *DoInfo) error {
